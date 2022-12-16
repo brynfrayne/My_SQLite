@@ -1,0 +1,5 @@
+nba_test_1.csv.id,nba_test_1.csv.Player,nba_test_1.csv.height,nba_test_1.csv.weight,nba_test_1.csv.college,nba_test_1.csv.born,nba_test_1.csv.birth_city,nba_test_1.csv.birth_state,nba_test_2.csv.id,nba_test_2.csv.name,nba_test_2.csv.year_start,nba_test_2.csv.year_end,nba_test_2.csv.position,nba_test_2.csv.height,nba_test_2.csv.weight,nba_test_2.csv.birth_date,nba_test_2.csv.college
+0,Curly Armstrong,180,77,Indiana University,1918,,,1,Curly Armstrong,1949,1951,G-F,5-11,170,"November 1, 1918",Indiana University
+3,Mark Jones,193,84,St. Bonaventure University,1961,,,3,Mark Jones,1984,1984,G,6-1,175,"April 10, 1961",St. Bonaventure University
+3,Mark Jones,193,84,St. Bonaventure University,1961,,,4,Mark Jones,2005,2005,G,6-6,215,"May 25, 1975",University of Central Florida
+8,Bryn Frayne,nil,100,nil,1999,nil,nil,2,Bryn Frayne,2001,2004,C,6-2,190,"May 30,1991",Camosun College

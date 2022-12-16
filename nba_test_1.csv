@@ -1,0 +1,10 @@
+id,Player,height,weight,college,born,birth_city,birth_state
+0,Curly Armstrong,180,77,Indiana University,1918,,
+1,Cliff Barker,188,83,University of Kentucky,1921,Yorktown,Indiana
+2,Leo Barnhorst,193,86,University of Notre Dame,1924,,
+3,Mark Jones,193,84,St. Bonaventure University,1961,,
+5,Mike Smith,190,170,Camosun College,1921,Yorktown,Indiana
+6,Mark Johnson,nil,200,nil,nil,nil,nil
+7,Bryan Fryan,184,95,University of Victoria,1991,Port Coquitlam,British Columbia
+8,Bryn Frayne,nil,100,nil,1999,nil,nil
+9,Cliff Barker,188,83,University of Kentucky,1924,Yorktown,Indiana

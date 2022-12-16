@@ -1,0 +1,31 @@
+nba_players_test.csv.id,nba_players_test.csv.Player,nba_players_test.csv.height,nba_players_test.csv.weight,nba_players_test.csv.college,nba_players_test.csv.born,nba_players_test.csv.birth_city,nba_players_test.csv.birth_state,nba_player_data.csv.id,nba_player_data.csv.name,nba_player_data.csv.year_start,nba_player_data.csv.year_end,nba_player_data.csv.position,nba_player_data.csv.height,nba_player_data.csv.weight,nba_player_data.csv.birth_date,nba_player_data.csv.college
+0,Curly Armstrong,180,77,Indiana University,1918,,,127,Curly Armstrong,1949,1951,G-F,5-11,170,"November 1, 1918",Indiana University
+1,Cliff Barker,188,83,University of Kentucky,1921,Yorktown,Indiana,196,Cliff Barker,1950,1952,G,6-2,185,"January 15, 1921",University of Kentucky
+2,Leo Barnhorst,193,86,University of Notre Dame,1924,,,211,Leo Barnhorst,1950,1954,F-G,6-4,190,"May 11, 1924",University of Notre Dame
+3,Ed Bartels,196,88,North Carolina State University,1925,,,224,Ed Bartels,1950,1951,F,6-5,195,"October 8, 1925",North Carolina State University
+4,Ralph Beard,178,79,University of Kentucky,1927,Hardinsburg,Kentucky,256,Ralph Beard,1950,1951,G,5-10,175,"December 2, 1927",University of Kentucky
+5,Gene Berce,180,79,Marquette University,1926,,,301,Gene Berce,1950,1950,G-F,5-11,175,"November 22, 1926",Marquette University
+6,Charlie Black,196,90,University of Kansas,1921,Arco,Idaho,333,Charlie Black,1949,1952,F-C,6-5,200,"June 15, 1921",University of Kansas
+7,Nelson Bobb,183,77,Temple University,1924,Philadelphia,Pennsylvania,359,Nelson Bobb,1950,1953,G,6-0,170,"February 25, 1924",Temple University
+8,Jake Bornheimer,196,90,Muhlenberg College,1927,New Brunswick,New Jersey,391,Jake Bornheimer,1949,1950,F-C,6-5,200,"June 29, 1927",Muhlenberg College
+9,Vince Boryla,196,95,University of Denver,1927,East Chicago,Indiana,394,Vince Boryla,1950,1954,F,6-5,210,"March 11, 1927",University of Denver
+10,Don Boven,193,95,Western Michigan University,1925,Kalamazoo,Michigan,400,Don Boven,1950,1953,F-G,6-4,210,"March 6, 1925",Western Michigan University
+11,Harry Boykoff,208,102,St. John's University,1922,Brooklyn,New York,415,Harry Boykoff,1950,1951,C,6-10,225,"July 24, 1922",St. John's University
+12,Joe Bradley,190,79,Oklahoma State University,1928,Washington,Oklahoma,429,Joe Bradley,1950,1950,G,6-3,175,"September 24, 1928",Oklahoma State University
+13,Bob Brannum,196,97,Michigan State University,1925,,,440,Bob Brannum,1950,1955,F-C,6-5,215,"May 28, 1925",Michigan State University
+14,Carl Braun,196,81,Colgate University,1927,Brooklyn,New York,445,Carl Braun,1948,1962,G-F,6-5,180,"September 25, 1927",Colgate University
+15,Frankie Brian,185,81,Louisiana State University,1923,Zachary,Louisiana,457,Frankie Brian,1950,1956,G,6-1,180,"May 1, 1923",Louisiana State University
+16,Price Brookfield,193,83,West Texas A&M University,1920,Floydada,Texas,473,Price Brookfield,1949,1950,F-G,6-4,185,"May 11, 1920",West Texas A&M University
+17,Bob Brown,193,92,Miami University,1923,Versailles,Ohio,483,Bob Brown,1949,1950,F,6-4,205,"November 12, 1923",Miami University
+18,Jim Browne,208,106,,1930,Midlothian,Illinois,521,Jim Browne,1949,1950,C,6-10,235,"January 1, 1930",
+19,Walt Budko,196,99,Columbia University,1925,Kearney,New Jersey,542,Walt Budko,1949,1952,F-C,6-5,220,"July 30, 1925",Columbia University
+20,Jack Burmaster,190,86,University of Illinois at Urbana-Champaign,1926,,,560,Jack Burmaster,1950,1950,G,6-3,190,"December 23, 1926",University of Illinois at Urbana-Champaign
+21,Tommy Byrnes,190,79,Seton Hall University,1923,Teaneck,New Jersey,588,Tommy Byrnes,1947,1951,F-G,6-3,175,"February 19, 1923",Seton Hall University
+22,Bill Calhoun,190,81,City College of San Francisco,1927,San Francisco,California,602,Bill Calhoun,1949,1955,F-G,6-3,180,"November 4, 1927",City College of San Francisco
+23,Don Carlson,183,77,University of Minnesota,1919,Minneapolis,Minnesota,625,Don Carlson,1947,1951,G-F,6-0,170,"March 22, 1919",University of Minnesota
+24,Bob Carpenter,196,90,East Texas State University,1917,,,628,Bob Carpenter,1950,1951,F-C,6-5,200,"November 6, 1917",East Texas State University
+25,Jake Carter,193,88,East Texas State University,1924,,,646,Jake Carter,1950,1950,F-C,6-4,195,"July 25, 1924",East Texas State University
+27,John Chaney,190,83,Louisiana State University,1920,,,681,John Chaney,1950,1950,F-C,6-3,185,"February 29, 1920",Louisiana State University
+28,Leroy Chollet,188,86,Canisius College,1925,New Orleans,Louisiana,696,Leroy Chollet,1950,1951,F,6-2,190,"March 5, 1925",Canisius College
+29,Bill Closs,196,88,Rice University,1922,Edge,Texas,727,Bill Closs,1950,1952,F-C,6-5,195,"January 8, 1922",Rice University
+30,Paul Cloyd,188,81,University of Wisconsin,1920,,,729,Paul Cloyd,1950,1950,G-F,6-2,180,"June 13, 1920",University of Wisconsin
