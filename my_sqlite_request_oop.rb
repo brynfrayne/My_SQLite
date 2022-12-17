@@ -101,7 +101,6 @@ class MySqliteRequest
   def insert(table_name)
     # Insert Implement a method to insert which will receive a table name (filename). It will continue to build the request.
     @file_name = table_name
-    puts @file_name
     return self
   end
 
@@ -143,35 +142,42 @@ class MySqliteRequest
     if @join_request.length > 0
       join_tables()
       save_updated_table_to_file(@new_join_table_file, "w+")
-
     end
 
+    # Filter table by WHERE condition if WHERE query exists and there are no UPDATE or DELETE requests
     if @where_query.length > 0 && !(@update_values.length > 0) && !@delete_request
       filter_table_by_where_condition()
     end
 
+    # Sort table if sort query exists
     if @sort_query.length > 0
       sort_table()
     end
 
+    # Filter table by SELECT request if SELECT request is not '*' and there is more than one item in the SELECT request
     if @select_request[0] != '*' && @select_request.length > 1
       filter_table_by_select()
     end
 
+    # Update values in data table and save updated table to file if UPDATE request exists
     if @update_values.length > 0
       update_values_in_data_table()
       save_updated_table_to_file(@file_name, "w")
     end
 
+    # Delete table value and save updated table to file if DELETE request exists
     if @delete_request
       delete_table_value()
       save_updated_table_to_file(@file_name, "w")
     end
 
+    # Insert values in table and save updated table to file if INSERT request exists
     if @insert_values.length > 0
       insert_values_in_table()
       save_updated_table_to_file(@file_name, "w")
     end
+
+    # Print table or print table data array with hashes if SELECT request exists
     if @select_request.length > 0
       if @args_from_cli
         print_table()
@@ -179,6 +185,7 @@ class MySqliteRequest
         puts "#{@table_data_array_with_hashes}"
       end
     end
+
     return
   end
 
@@ -328,7 +335,7 @@ class MySqliteRequest
 
   def sort_table()
 
-    if @sort_query[0] == 'ASC'
+    if @sort_query[0].to_sym == :ASC
       @table_data_array_with_hashes = @table_data_array_with_hashes.sort_by{|a|
 
         if !a["#{@sort_query[1]}"].is_a?(Integer)
@@ -339,7 +346,7 @@ class MySqliteRequest
         end
       }
 
-    elsif @sort_query[0] == 'DESC'
+    elsif @sort_query[0].to_sym == :DESC
       @table_data_array_with_hashes = @table_data_array_with_hashes.sort_by{|a|
         if !a["#{@sort_query[1]}"].is_a?(Integer)
           a["#{@sort_query[1]}"].downcase
@@ -377,7 +384,7 @@ class MySqliteRequest
     @table_data_array_with_hashes.each do |row|
       i = 0
 
-      while i < @where_query.length
+      until i == @where_query.length # changed from while to until -- does this make it more ruby like?
 
         @where_query_not_match = false
         where_column_value = row["#{@where_query[i]}"]
@@ -416,11 +423,11 @@ class MySqliteRequest
     @table_data_array_with_hashes.each do |row|
 
       @left_table_column_name_adjusted = false
-      left_table_value = row["#{left_table_column}"]
+      left_table_value = row["#{left_table_column}"].to_sym
 
       @join_table_data_hash_arr.each do |join_table_row|
 
-        right_table_value = join_table_row["#{right_table_column}"]
+        right_table_value = join_table_row["#{right_table_column}"].to_sym
 
         if left_table_value == right_table_value
 
@@ -477,138 +484,3 @@ class MySqliteRequest
   end
 
 end
-request = MySqliteRequest.new
-request = request.from('students.csv')
-# request = request.delete
-# request = request.from('nba_players_test.csv')
-# request = request.from('nba_test_1.csv')
-# request = request.join('nba_test_1.csv.Player', 'nba_test_2.csv', 'nba_test_2.csv.name')
-# request = request.update('nba_test_2.csv')
-# request = request.insert('students.csv')
-# request = request.values({:name=>"Jiimmy Jo",:email=>"janejane@gmail.com", :grade=>"A-", :blog=>"https://blog.jimsspace.com"})
-# request = request.set({"name"=>"Bryn Frayne","year_start"=>"2001","year_end"=>"2004","position"=>'C',"height"=>'6-2',"weight"=>'190',"birth_date"=>'May 30,1991',"college"=>'Camosun College'})
-# request = request.where('name','John')
-# request = request.where(/'nba_players_test.csv.height','180')
-request = request.where('email', 'jane@janedoe.com')
-request = request.select('*')
-# request = request.select(['nba_players.csv.Player', 'nba_player_data.csv.college'])
-# request = request.select(['email', 'blog'])
-# request = request.order('DESC', 'email')
-
-# request = request.join('nba_players_test.csv.Player', 'nba_player_data.csv', 'nba_player_data.csv.name')
-# request = request.where('nba_players_test.csv.weight', 77)
-# request = request.where('nba_players.csv.born', '1921')
-print request.run
-# request.run
-
-
-
-
-
-
-
-
-
-# request = MySqliteRequest.new
-# request = request.from('students.csv')
-# request = request.select('*')
-# request = request.select('name')
-# request = request.where('weight', '180')
-# request = request.join('weight', 'test_johnny.csv', 'weight')
-# request = request.order('DESC', 'name')
-# puts request.run
-# print MySqliteRequest.from('students.csv').select('*').run
-
-
-# came from line 151? just below if !where_query_match:
-  # @where_query.each_index do |i|
-            # if row[:"#{@where_query[0]}"] != @where_query[1]
-            #   next
-            # end
-        # end
-
-        # if there is a where request, check if the row's value matches the criteria
-        # if @where_query.length > 0 && row[:"#{@where_query[0]}"] != @where_query[1]
-        #   next
-        # end
-
-
-
-          # def filter_table_data()
-  #   puts "#{@where_query}"
-  #   matches_from_right_table = []
-  #   @@filtered_table = []
-
-
-  #   @table_data_array_with_hashes.each do |row|
-
-  #     # go through the where request and filter based on every where request passed in
-  #     if @where_query.length > 0
-  #       i = 0
-  #       while i < @where_query.length
-  #         @where_query_not_match = false
-  #         if row[:"#{@where_query[i]}"] != @where_query[i+1]
-  #           @where_query_not_match = true
-  #           break
-  #         end
-  #         i += 2
-  #       end
-  #     end
-
-  #     if @where_query_not_match
-  #       next
-  #     end
-
-  #     # if there is a join request
-  #     if @join_request.length > 0
-  #       left_table_value = row[:"#{join_query[0]}"]
-  #       @join_table_data_hash_arr.each do |join_table_row|
-  #         if join_table_row[:"#{@join_request[1]}"] == left_table_value && !matches_from_right_table.include?(join_table_row)
-  #           matches_from_right_table.push(join_table_row)
-  #           join_query_match = true
-  #         end
-  #       end
-  #     end
-
-  #     if @join_request.length > 0 && !join_query_match
-  #       next
-  #     end
-  #     puts "does it make ithere??????????"
-  #     filtered_hash = {}
-  #     puts "184: #{@select_request}"
-
-  #     @select_request.each do |column|
-  #       filtered_hash[:"#{column}"] = row[:"#{column}"]
-  #     end
-  #     @@filtered_table.push(filtered_hash)
-  #   end
-
-  #   joined_rows = filter_matching_rows(matches_from_right_table)
-  #   joined_rows.each do |row|
-  #     @@filtered_table.push(row)
-  #   end
-
-  #   if @sort_query.length > 0
-  #     if @sort_query[0] == 'ASC'
-  #       @@filtered_table = @@filtered_table.sort_by{|a| a[:sort_value]}
-  #     elsif @sort_query[1] == 'DESC'
-  #       @@filtered_table = @@filtered_table.sort_by{|a| a[:sort_value]}.reverse
-  #     end
-  #   end
-
-  # end
-
-
-  # def filter_matching_rows(table)
-    #   matched_table = []
-    #   table.each do |row|
-    #     matched_columns  = {}
-    #     @select_request.each do |column_title|
-    #       if row[:"#{column_title}"]
-    #         matched_columns[:"#{column_title}"] = row[:"#{column_title}"]
-    #       end
-    #     end
-    #     matched_table.push(matched_columns)
-    #   end
-    #   return matched_table
-    # end

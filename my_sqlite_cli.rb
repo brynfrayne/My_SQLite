@@ -31,81 +31,36 @@ def parse_args_from_input(query)
 end
 
 def split_args(string)
-
-
-
-  # split all values by quotes, seperating values inside and outside quotes
   delimiters = ['"', "'"]
   split_str = string.split(Regexp.union(delimiters))
-  strings_outside_quotes_array = []
+  split_outside_quotes = split_str.each_with_index.map do |element, i|
+    if i.even?
+      element.split(' ')
+    end
+  end.compact
 
-  # go through the split string and split and elements at index value outside of quotations and push to new array
+  split_outside_quotes.each do |array|
+    array.each do |element|
+
+      element.delete!(',()') if element.include?(',()')
+      element.delete!('()') if element.include?('()')
+      element.delete!(',') if element.include?(',')
+      element.delete!('(') if element.include?('(')
+      element.delete!(')') if element.include?(')')
+      element.delete!(';') if element.include?(';')
+      array.delete(element) if element == ''
+
+      element.to_i if element.match?(/\A\d+\z/)
+    end
+  end
+
   split_str.each_with_index do |element, i|
-
-    # split all values outside of quotes
-    if i % 2 == 0
-      # push all split values outside of quotes into a new array
-      split_str_outside_quotes = element.split(' ')
-      strings_outside_quotes_array.push(split_str_outside_quotes)
-
-    end
-
+    split_str[i] = split_outside_quotes[i / 2] if i.even?
   end
 
-  # go through the array of subarrays containing the split strings
-  strings_outside_quotes_array.each do |array|
-    # go through the subarray of the split strings
-    array.each_with_index do |element, i|
-
-      # remove any elements == ','
-      if element == ','
-        split_str.slice!(i)
-      end
-
-      # remove any occcurences of ',' in an element
-      if element.include?(',')
-        element.slice!(element.index(','))
-      end
-
-      if element.include?('(')
-        element.slice!(element.index('('))
-      end
-
-      if element.include?(')')
-        element.slice!(element.index(')'))
-      end
-
-      if element.include?(';')
-        element.slice!(element.index(';'))
-      end
-
-      if element == ';'
-        array.slice!(i)
-      end
-
-      # check for any numeric values and convert to integers
-      if element.match? /\A\d+\z/
-        array[i] = element.to_i
-      end
-
-    end
-  end
-
-  j = 0
-  i = 0
-  # go through the string split on quotations, and replace the strings outside quotes with their corresponding filtered array
-  while i < split_str.length
-    if i % 2 == 0
-      split_str[i] = strings_outside_quotes_array[j]
-      j += 1
-    end
-    i += 1
-  end
-
-  split_str = split_str.flatten
-  return split_str
-
+  split_str.flatten
 end
+
 
 def create_hash_from_insert_args(string)
   columns = []
@@ -240,21 +195,3 @@ def run
 end
 
 run()
-
-#  i want to rewrite the above code to be object oriented
-#  i want to create a class for each of the following
-#  SELECT, INSERT, UPDATE, DELETE, FROM, WHERE, JOIN, ORDER, DESC, AND
-#  i want to create a class for each of the following
-
-
-
-# when 'VALUES'
-    #   values_request = parse_args_from_input('VALUES')
-    #   @request = @request.values(@values_hash)
-# when 'SET'
-    #   set_request = parse_args_from_input('SET')
-    #   @request = @request.set(@values_hash)
-# when 'ON' # need to add these iunput values to the join request
-    #   on_request = parse_args_from_input('ON')
-    #   @request = @request.on(on_request)
-

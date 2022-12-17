@@ -9,8 +9,29 @@ def split_args(string)
   end.compact
 
   split_outside_quotes.each do |array|
+    puts "array: #{array}"
     array.each do |element|
-      element.delete!(',', '(', ')', ';')
+      puts "element: #{element}"
+      # characters_to_remove = [',()', '()', ',', '(', ')', ';']
+      # element.delete!(*characters_to_remove) if characters_to_remove.any? { |c| element.include?(c) } # this does not work as intended
+      # array.delete(element) if element == ''
+      #This refactored version simplifies the code by:
+
+      # Storing the characters to remove in an array, which allows for easier maintenance if the list of characters changes in the future
+      # Using the any? method to check if any of the characters in the list are present in the element
+      # Using the splat operator (*) to pass the array of characters to the delete! method as separate arguments
+      # Removing the unnecessary if statements for each character to remove
+
+      # if element is or contains ',', '(', ')', ';' or is empty, delete it
+      element.delete!(',()') if element.include?(',()')
+      element.delete!('()') if element.include?('()')
+      element.delete!(',') if element.include?(',')
+      element.delete!('(') if element.include?('(')
+      element.delete!(')') if element.include?(')')
+      element.delete!(';') if element.include?(';')
+      array.delete(element) if element == ''
+
+
       element.to_i if element.match?(/\A\d+\z/)
     end
   end
@@ -112,52 +133,82 @@ Using the each_with_index method to iterate through split_str and replace the el
 # end
 
 
-def create_hash_from_insert_args(string)
-  columns = []
+# def create_hash_from_insert_args(string)
+#   columns = []
+#   result_hash = {}
+
+#   if string.count('(') > 1
+#     # slice of the colum values provided in the first brackets
+#     insert_column_values = string[string.index('(')+1..string.index(')')-1];
+#     # slice off all the values in the first brackets(including the brackets)
+#     string.slice!(string.index('(')..string.index(')'))
+#     # split the sliced off column value string and set the column array to that
+#     columns = insert_column_values.split(',').map(&:strip)
+#   else
+#     file_name = ''
+#     split_str = string.split(' ')
+#     split_str.each do |element|
+#       if element.include?('.csv')
+#         file_name = element
+#       end
+#     end
+#     columns = CSV.open(file_name, 'r') { |csv| csv.first }
+#     columns.each do |column|
+#       if column == 'id'
+#         columns.delete(column)
+#       end
+#     end
+#   end
+
+#   insert_values = string[string.index('(')+1..string.index(')')-1].split(',').map(&:strip)
+#   string.slice!(string.index('(')..-1)
+#   puts "string: #{string}"
+#   insert_values.each_with_index do |value, i|
+#     insert_values[i] = value.delete_prefix("'").delete_suffix("'")
+#   end
+#   puts "isnert values: #{insert_values}"
+
+#   # if columns.length < insert_values.length
+#   # end
+
+#   columns.each_with_index do |value, i|
+#     # puts insert_values[i]
+#     result_hash["#{value}"] = insert_values[i]
+
+#   end
+#   return result_hash
+
+# end
+def create_hash_from_insert_args(string) # chat gpt wrote this version, the one above is mine and currently in the codebase
   result_hash = {}
 
   if string.count('(') > 1
-    # slice of the colum values provided in the first brackets
-    insert_column_values = string[string.index('(')+1..string.index(')')-1];
-    # slice off all the values in the first brackets(including the brackets)
-    string.slice!(string.index('(')..string.index(')'))
-    # split the sliced off column value string and set the column array to that
-    columns = insert_column_values.split(',').map(&:strip)
+    # Extract column names from INSERT statement
+    columns_start_index = string.index('(') + 1
+    columns_end_index = string.index(')') - 1
+    columns_string = string[columns_start_index..columns_end_index]
+    columns = columns_string.split(',').map(&:strip)
   else
-    file_name = ''
-    split_str = string.split(' ')
-    split_str.each do |element|
-      if element.include?('.csv')
-        file_name = element
-      end
-    end
+    # Extract column names from CSV file
+    file_name = string.split(' ').find { |e| e.include?('.csv') }
     columns = CSV.open(file_name, 'r') { |csv| csv.first }
-    columns.each do |column|
-      if column == 'id'
-        columns.delete(column)
-      end
-    end
+    columns.reject! { |c| c == 'id' }
   end
 
-  insert_values = string[string.index('(')+1..string.index(')')-1].split(',').map(&:strip)
-  string.slice!(string.index('(')..-1)
-  puts "string: #{string}"
-  insert_values.each_with_index do |value, i|
-    insert_values[i] = value.delete_prefix("'").delete_suffix("'")
+  # Extract values from INSERT statement
+  values_start_index = string.index('(') + 1
+  values_end_index = string.index(')') - 1
+  values_string = string[values_start_index..values_end_index]
+  values = values_string.split(',').map(&:strip).map { |v| v.delete_prefix("'").delete_suffix("'") }
+
+  # Create hash with column names as keys and values as values
+  columns.each_with_index do |column, i|
+    result_hash[column] = values[i]
   end
-  puts "isnert values: #{insert_values}"
 
-  # if columns.length < insert_values.length
-  # end
-
-  columns.each_with_index do |value, i|
-    # puts insert_values[i]
-    result_hash["#{value}"] = insert_values[i]
-
-  end
-  return result_hash
-
+  result_hash
 end
+
 
 def create_hash_from_set_args(string)
   result_hash = {}
@@ -207,11 +258,11 @@ end
 # $ INSERT INTO students.csv VALUES (John, john@johndoe.com, A, https://blog.johndoe.com);
 # $ INSERT INTO students.csv (name, email, grade, blog) VALUES (John, john@johndoe.com, A, https://blog.johndoe.com);
 # $ INSERT INTO students.csv VALUES ('John', 'john@johndoe.com', 'A', 'https://blog.johndoe.com');
-# $ UPDATE students.csv SET email = 'jane@janedoe.com', blog = 'https://blog.jimmy-jo.com' WHERE name = 'Jimmy Jo';
-# $ DELETE FROM students.csv WHERE name = 'John';
-# $ DELETE FROM students.csv WHERE name = 'John' AND email = 'jane@johndoe.com';
+# $ UPDATE students.csv SET email = 'jane@janedoe.com', blog = 'https://blog.jane-jo.com' WHERE name = 'Jimmy Jo';
+# $
+# $ DELETE FROM students.csv WHERE name = 'John' AND email = 'john@johndoe.com';
 # $ DELETE FROM nba_test_2_copy_2.csv;
-
+# string = "DELETE FROM (students.csv) WHERE name = 'John';"
 
 
 
