@@ -82,10 +82,7 @@ class MySqliteRequest
 
   def join(column_on_db_a, filename_db_b, column_on_db_b)
     # Join Implement a join method which will load another filename_db and will join both database on a on column.
-    @join_file_name = filename_db_b
-    @join_table_arr = CSV.parse(File.read(filename_db_b))
-    @join_column_titles = @join_table_arr.shift
-    @join_table_data_hash_arr = table_data_array_to_hash(@join_column_titles, @join_table_arr)
+    read_table_data(filename_db_b, @join_table_arr, @join_column_titles, @join_table_data_hash_arr)
     @join_request.push(column_on_db_a)
     @join_request.push(column_on_db_b)
     return self
@@ -130,16 +127,53 @@ class MySqliteRequest
   end
 
   def run
+
     if !File.file?(@file_name)
       puts "Error: Invalid File"
       return self
     end
 
-    @table_data_arr = CSV.parse(File.read(@file_name))
-    @column_titles = @table_data_arr.shift
+    read_table_data(@file_name, @table_data_arr, @column_titles, @table_data_array_with_hashes)
+    join_filter_sort_select_table()
+    update_delete_insert_table()
+    display_table_data()
+    return
+  end
 
-    @table_data_array_with_hashes = table_data_array_to_hash(@column_titles, @table_data_arr)
+  def read_table_data(file_name, array_table, column_titles, hash_table)
+    array_table = CSV.parse(File.read(file_name))
+    column_titles = array_table.shift
+    hash_table = table_data_array_to_hash(column_titles, array_table)
+  end
 
+  def update_delete_insert_table
+    if @update_values.length > 0
+      update_values_in_data_table()
+      save_updated_table_to_file(@file_name, "w")
+    end
+
+    if @delete_request
+      delete_table_value()
+      save_updated_table_to_file(@file_name, "w")
+    end
+
+    if @insert_values.length > 0
+      insert_values_in_table()
+      save_updated_table_to_file(@file_name, "w")
+    end
+  end
+
+  def display_table_data
+    if @select_request.length > 0
+      if @args_from_cli
+        print_table()
+      else
+        puts "#{@table_data_array_with_hashes}"
+      end
+    end
+  end
+
+  join_filter_sort_select_table
     if @join_request.length > 0
       join_tables()
       save_updated_table_to_file(@new_join_table_file, "w+")
@@ -157,29 +191,6 @@ class MySqliteRequest
     if @select_request[0] != '*' && @select_request.length > 1
       filter_table_by_select()
     end
-
-    if @update_values.length > 0
-      update_values_in_data_table()
-      save_updated_table_to_file(@file_name, "w")
-    end
-
-    if @delete_request
-      delete_table_value()
-      save_updated_table_to_file(@file_name, "w")
-    end
-
-    if @insert_values.length > 0
-      insert_values_in_table()
-      save_updated_table_to_file(@file_name, "w")
-    end
-    if @select_request.length > 0
-      if @args_from_cli
-        print_table()
-      else
-        puts "#{@table_data_array_with_hashes}"
-      end
-    end
-    return
   end
 
   def save_updated_table_to_file(file, mode)
