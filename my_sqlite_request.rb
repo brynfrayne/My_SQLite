@@ -3,14 +3,19 @@ require 'CSV'
 class MySqliteRequest
   def initialize
     @args_from_cli = false
-    @left_table_column_name_adjusted = false
-    @file_name = nil
-    @select_request = []
+    @column_titles = []
     @delete_request = false
-    @column_titles
+    @file_name = nil
     @insert_values = []
     @join_request = []
+    @join_table_array = []
+    @join_column_titles = []
+    @join_table_data_hash_array = []
+    @left_table_column_name_adjusted = false
+    @select_request = []
     @sort_query = []
+    @table_data_arr = []
+    @table_data_array_with_hashes = []
     @update_values = []
     @where_query = []
     @where_query_not_match = false
@@ -19,26 +24,37 @@ class MySqliteRequest
   def table_data_array_to_hash(column_titles, table)
     table_data_hash_array = []
     id = 0
-
     table.each do |row|
-
       hash = {}
-      id += 1
-      hash["id"] = id
-      row.each_index do |i|
-        if row[i] && row[i].match?(/\A\d+\z/)
-          row[i] = row[i].to_i
-        end
-        hash["#{column_titles[i]}"] = row[i]
-      end
+      hash, id = assign_hash_values(hash, column_titles, row, id)
       table_data_hash_array.push(hash)
     end
+    column_titles = check_for_id_column(column_titles)
+    return table_data_hash_array
+  end
 
+  def assign_hash_values(hash, column_titles, row, id)
+    id += 1
+    hash["id"] = id
+    row.each_index do |i|
+      row[i] = convert_integer_strings_to_integers(row, i)
+      hash["#{column_titles[i]}"] = row[i]
+    end
+    return hash, id
+  end
+
+  def convert_integer_strings_to_integers(row, i)
+    if row[i] && row[i].match?(/\A\d+\z/)
+      row[i] = row[i].to_i
+    end
+    return row[i]
+  end
+
+  def check_for_id_column(column_titles)
     if !column_titles.include?("id")
       column_titles.unshift("id")
     end
-
-    return table_data_hash_array
+    return column_titles
   end
 
   def args_from_cli
@@ -54,7 +70,6 @@ class MySqliteRequest
 
   def select(column_name)
     # Select Implement a where method which will take one argument a string OR an array of string. It will continue to build the request. During the run() you will collect on the result only the columns sent as parameters to select :-).
-    # @select_request = []
     if column_name.is_a?(Array)
       @select_request = column_name
     else
@@ -82,7 +97,8 @@ class MySqliteRequest
 
   def join(column_on_db_a, filename_db_b, column_on_db_b)
     # Join Implement a join method which will load another filename_db and will join both database on a on column.
-    read_table_data(filename_db_b, @join_table_arr, @join_column_titles, @join_table_data_hash_arr)
+    @join_file_name = filename_db_b
+    @join_table_array, @join_column_titles, @join_table_data_hash_array = read_table_data(@join_file_name, @join_table_array, @join_column_titles, @join_table_data_hash_array)
     @join_request.push(column_on_db_a)
     @join_request.push(column_on_db_b)
     return self
@@ -127,13 +143,11 @@ class MySqliteRequest
   end
 
   def run
-
     if !File.file?(@file_name)
       puts "Error: Invalid File"
       return self
     end
-
-    read_table_data(@file_name, @table_data_arr, @column_titles, @table_data_array_with_hashes)
+    @table_data_arr, @column_titles, @table_data_array_with_hashes = read_table_data(@file_name, @table_data_arr, @column_titles, @table_data_array_with_hashes)
     join_filter_sort_select_table()
     update_delete_insert_table()
     display_table_data()
@@ -144,6 +158,23 @@ class MySqliteRequest
     array_table = CSV.parse(File.read(file_name))
     column_titles = array_table.shift
     hash_table = table_data_array_to_hash(column_titles, array_table)
+    return array_table, column_titles, hash_table
+  end
+
+  def join_filter_sort_select_table
+    if @join_request.length > 0
+      join_tables()
+      save_updated_table_to_file(@new_join_table_file, "w+")
+    end
+    if @where_query.length > 0 && !(@update_values.length > 0) && !@delete_request
+      filter_table_by_where_condition()
+    end
+    if @sort_query.length > 0
+      sort_table()
+    end
+    if @select_request[0] != '*' && @select_request.length > 1
+      filter_table_by_select()
+    end
   end
 
   def update_delete_insert_table
@@ -151,12 +182,10 @@ class MySqliteRequest
       update_values_in_data_table()
       save_updated_table_to_file(@file_name, "w")
     end
-
     if @delete_request
       delete_table_value()
       save_updated_table_to_file(@file_name, "w")
     end
-
     if @insert_values.length > 0
       insert_values_in_table()
       save_updated_table_to_file(@file_name, "w")
@@ -173,52 +202,16 @@ class MySqliteRequest
     end
   end
 
-  join_filter_sort_select_table
-    if @join_request.length > 0
-      join_tables()
-      save_updated_table_to_file(@new_join_table_file, "w+")
-
-    end
-
-    if @where_query.length > 0 && !(@update_values.length > 0) && !@delete_request
-      filter_table_by_where_condition()
-    end
-
-    if @sort_query.length > 0
-      sort_table()
-    end
-
-    if @select_request[0] != '*' && @select_request.length > 1
-      filter_table_by_select()
-    end
-  end
-
-  def save_updated_table_to_file(file, mode)
-    CSV.open(file, mode) do |csv|
-      csv << @column_titles
-      @table_data_array_with_hashes.each_with_index do |row, i|
-        array_row = convert_hash_to_array(row, i)
-        csv << array_row
-      end
-    end
-  end
-
-  def convert_hash_to_array(hash, i)
-    array = []
-
-    @column_titles.each do |value|
-      array.push(hash["#{value}"])
-    end
-
-    return array
-  end
-
+# display table data
   def print_table()
-
     if @select_request[0] == '*'
       @select_request = @column_titles
     end
+    print_column_titles()
+    print_row_values()
+  end
 
+  def print_column_titles()
     @select_request.each_with_index do |column, i|
       if i == @select_request.length - 1
         print "#{column}"
@@ -227,7 +220,9 @@ class MySqliteRequest
       end
     end
     print "\n"
+  end
 
+  def print_row_values()
     @table_data_array_with_hashes.each do |row|
       @select_request.each_with_index do |column, i|
         if i == @select_request.length - 1
@@ -240,6 +235,46 @@ class MySqliteRequest
     end
   end
 
+# update, delete, insert
+  # update
+  def update_values_in_data_table()
+    update_keys = @update_values.keys
+    if @where_query.length > 0
+      @table_data_array_with_hashes.each do |row|
+        where_column_value, where_comparison_operator, where_criteria_value = prepare_where_query(0, row)
+        if compare(where_comparison_operator, where_column_value, where_criteria_value)
+          update_keys.each do |key|
+            row["#{key}"] = @update_values["#{key}"]
+          end
+        end
+      end
+    else
+      @table_data_array_with_hashes.each do |row|
+        update_keys.each do |key|
+          row["#{key}".to_sym] = @update_values["#{key}"]
+        end
+      end
+    end
+  end
+
+  # delete
+  def delete_table_value()
+    if @where_query.length > 0
+      @table_data_array_with_hashes.reverse_each do |row|
+        @where_query_not_match = check_where_query(row)
+        if @where_query_not_match
+          next
+        end
+        @table_data_array_with_hashes.delete(row)
+      end
+    else # deletes every row
+      @table_data_array_with_hashes.reverse_each do |row|
+        @table_data_array_with_hashes.delete(row)
+      end
+    end
+  end
+
+  # insert
   def insert_values_in_table()
 
     insert_keys = @insert_values.keys
@@ -254,113 +289,137 @@ class MySqliteRequest
         @insert_values[:"#{column}"] = nil
       end
     end
-
     @table_data_array_with_hashes.push(@insert_values)
   end
 
-  def delete_table_value()
-
-    if @where_query.length > 0
-
-      @table_data_array_with_hashes.reverse_each do |row|
-        i = 0
-
-        while i < @where_query.length
-          @where_query_not_match = false
-          where_column_value = row["#{@where_query[i]}"]
-          where_comparison_operator = @where_query[i+1]
-          where_criteria_value = @where_query[i+2]
-
-          if !compare(where_comparison_operator, where_column_value, where_criteria_value)
-            @where_query_not_match = true
-            break
-          end
-          i += 3
-        end
-        if @where_query_not_match
-          next
-        end
-        @table_data_array_with_hashes.delete(row)
-      end
-
-    else # deletes every row
-      @table_data_array_with_hashes.reverse_each do |row|
-        @table_data_array_with_hashes.delete(row)
+  def save_updated_table_to_file(file, mode)
+    CSV.open(file, mode) do |csv|
+      csv << @column_titles
+      @table_data_array_with_hashes.each_with_index do |row, i|
+        array_row = convert_hash_to_array(row, i)
+        csv << array_row
       end
     end
-
   end
 
-  def update_values_in_data_table()
-
-    update_keys = @update_values.keys
-
-    if @where_query.length > 0
-
-      @table_data_array_with_hashes.each do |row|
-
-        where_column_value = row["#{@where_query[0]}"]
-        where_comparison_operator = @where_query[1]
-        where_criteria_value = @where_query[2]
-
-        if compare(where_comparison_operator, where_column_value, where_criteria_value)
-          update_keys.each do |key|
-            row["#{key}"] = @update_values["#{key}"]
-          end
-        end
-      end
-
-    else
-      @table_data_array_with_hashes.each do |row|
-
-        update_keys.each do |key|
-          row["#{key}".to_sym] = @update_values["#{key}"]
-        end
-      end
-
+  def convert_hash_to_array(hash, i)
+    array = []
+    @column_titles.each do |value|
+      array.push(hash["#{value}"])
     end
-
+    return array
   end
 
-  def filter_table_by_select()
-    filtered_set = []
-
+# join, filter, sort, select
+  # join
+  def join_tables()
+    joined_table = []
+    left_table_column, right_table_column = remove_file_extension_from_join_value()
     @table_data_array_with_hashes.each do |row|
-      filtered_hash = {}
+      @left_table_column_name_adjusted = false
+      left_table_value = row["#{left_table_column}"]
+      @join_table_data_hash_array.each do |join_table_row|
+        temp_table = compare_and_join_tables(row, left_table_value, join_table_row, right_table_column, joined_table)
+        joined_table = temp_table
+      end
+    end
+    @table_data_array_with_hashes = joined_table
+    prepare_joined_table()
+  end
 
-      @select_request.each do |column|
+  def remove_file_extension_from_join_value()
+    left_table_column = @join_request[0].slice!(@join_request[0].rindex('.')+1..-1)
+    right_table_column = @join_request[1].slice!(@join_request[1].rindex('.')+1..-1)
+    return left_table_column, right_table_column
+  end
+
+  def compare_and_join_tables(row, left_table_value, join_table_row, right_table_column, joined_table)
+    right_table_value = join_table_row["#{right_table_column}"]
+    if left_table_value == right_table_value
+      joined_rows = join_rows(row, join_table_row)
+      joined_table.push(joined_rows)
+      @left_table_column_name_adjusted = true
+      # break  --- break is only needed if you want to only match left table for one value on right & ignore any other possible matches
+    end
+    return joined_table
+  end
+
+  def join_rows(left_row, right_row)
+
+    left_keys = left_row.keys #array of left table keys
+    left_key_map = {}
+
+    right_keys = right_row.keys #array of right table keys
+    right_key_map = {}
+
+    if !@left_table_column_name_adjusted
+      left_keys.each_index do |i|
+        left_key_map["#{left_keys[i]}"] = "#{@file_name}.#{left_keys[i]}"
+      end
+      left_row.transform_keys!{ |k| left_key_map[k]}
+    end
+
+    right_keys.each_index do |i|
+      right_key_map["#{right_keys[i]}"] = "#{@join_file_name}.#{right_keys[i]}"
+    end
+    right_row.transform_keys!{ |k| right_key_map[k]}
+
+    joined_rows = left_row.merge(right_row)
+    return joined_rows
+
+  end
+
+  def prepare_joined_table()
+    @new_join_table_file = @file_name + '_join_' + @join_file_name
+
+    @column_titles.each_index do |i|
+      @column_titles[i] = "#{@file_name}.#{@column_titles[i]}"
+    end
+
+    @join_column_titles.each_index do |i|
+      @join_column_titles[i] = "#{@join_file_name}.#{@join_column_titles[i]}"
+    end
+
+    @joined_column_titles = @column_titles.concat(@join_column_titles)
+    @column_titles = @joined_column_titles
+  end
+
+  # filter
+  def filter_table_by_where_condition()
+    @filtered_table = []
+    @table_data_array_with_hashes.each do |row|
+      @where_query_not_match = check_where_query(row)
+      if @where_query_not_match
+        next
+      end
+      filtered_hash = {}
+      @column_titles.each do |column|
         filtered_hash["#{column}"] = row["#{column}"]
       end
-      filtered_set.push(filtered_hash)
+      @filtered_table.push(filtered_hash)
     end
+    @table_data_array_with_hashes = @filtered_table
 
-    @table_data_array_with_hashes = filtered_set
   end
 
-  def sort_table()
+  def prepare_where_query(i, row)
+    where_column_value = row["#{@where_query[i]}"]
+    where_comparison_operator = @where_query[i+1]
+    where_criteria_value = @where_query[i+2]
+    return where_column_value, where_comparison_operator, where_criteria_value
+  end
 
-    if @sort_query[0] == 'ASC'
-      @table_data_array_with_hashes = @table_data_array_with_hashes.sort_by{|a|
-
-        if !a["#{@sort_query[1]}"].is_a?(Integer)
-          a["#{@sort_query[1]}"].downcase
-
-        else
-          a["#{@sort_query[1]}"]
-        end
-      }
-
-    elsif @sort_query[0] == 'DESC'
-      @table_data_array_with_hashes = @table_data_array_with_hashes.sort_by{|a|
-        if !a["#{@sort_query[1]}"].is_a?(Integer)
-          a["#{@sort_query[1]}"].downcase
-
-        else
-          a["#{@sort_query[1]}"]
-        end
-      }.reverse
-
+  def check_where_query(row)
+    @where_query.each_index do |i|
+      next if i % 3 != 0
+      @where_query_not_match = false
+      where_column_value, where_comparison_operator, where_criteria_value = prepare_where_query(i, row)
+      if !compare(where_comparison_operator, where_column_value, where_criteria_value)
+        @where_query_not_match = true
+        break
+      end
     end
+    return @where_query_not_match
   end
 
   def compare(comparison, a, b)
@@ -380,116 +439,44 @@ class MySqliteRequest
     end
   end
 
+  # sort
+  def sort_table()
 
-  def filter_table_by_where_condition()
-
-    @filtered_table = []
-
-    @table_data_array_with_hashes.each do |row|
-      i = 0
-
-      while i < @where_query.length
-
-        @where_query_not_match = false
-        where_column_value = row["#{@where_query[i]}"]
-        where_comparison_operator = @where_query[i+1]
-        where_criteria_value = @where_query[i+2]
-
-        if !compare(where_comparison_operator, where_column_value, where_criteria_value)
-          @where_query_not_match = true
-          break
+    if @sort_query[0] == 'ASC'
+      @table_data_array_with_hashes = @table_data_array_with_hashes.sort_by{|a|
+        if !a["#{@sort_query[1]}"].is_a?(Integer)
+          a["#{@sort_query[1]}"].downcase
+        else
+          a["#{@sort_query[1]}"]
         end
-        i += 3
-      end
+      }
+    elsif @sort_query[0] == 'DESC'
+      @table_data_array_with_hashes = @table_data_array_with_hashes.sort_by{|a|
+        if !a["#{@sort_query[1]}"].is_a?(Integer)
+          a["#{@sort_query[1]}"].downcase
+        else
+          a["#{@sort_query[1]}"]
+        end
+      }.reverse
 
-      if @where_query_not_match
-        next
-      end
+    end
+  end
 
+  # select
+  def filter_table_by_select()
+    filtered_set = []
+    @table_data_array_with_hashes.each do |row|
       filtered_hash = {}
-
-      @column_titles.each do |column|
+      @select_request.each do |column|
         filtered_hash["#{column}"] = row["#{column}"]
       end
-
-      @filtered_table.push(filtered_hash)
+      filtered_set.push(filtered_hash)
     end
-    @table_data_array_with_hashes = @filtered_table
-
+    @table_data_array_with_hashes = filtered_set
   end
-
-  def join_tables()
-
-    join_table = []
-    left_table_column = @join_request[0].slice!(@join_request[0].rindex('.')+1..-1)
-    right_table_column = @join_request[1].slice!(@join_request[1].rindex('.')+1..-1)
-
-    @table_data_array_with_hashes.each do |row|
-
-      @left_table_column_name_adjusted = false
-      left_table_value = row["#{left_table_column}"]
-
-      @join_table_data_hash_arr.each do |join_table_row|
-
-        right_table_value = join_table_row["#{right_table_column}"]
-
-        if left_table_value == right_table_value
-
-          joined_rows = join_rows(row, join_table_row)
-          join_table.push(joined_rows)
-          @left_table_column_name_adjusted = true
-          # break  --- break is only needed if you want to only match left table for one value on right & ignore any other possible matches
-        end
-      end
-    end
-
-    @new_join_table_file = @file_name + '_join_' + @join_file_name
-    @table_data_array_with_hashes = join_table
-
-
-    @column_titles.each_index do |i|
-      @column_titles[i] = "#{@file_name}.#{@column_titles[i]}"
-    end
-
-    @join_column_titles.each_index do |i|
-      @join_column_titles[i] = "#{@join_file_name}.#{@join_column_titles[i]}"
-    end
-
-    @joined_column_titles = @column_titles.concat(@join_column_titles)
-    @column_titles = @joined_column_titles
-
-  end
-
-  def join_rows(left_row, right_row)
-
-    left_keys = left_row.keys #array of left table keys
-    left_key_map = {}
-
-    right_keys = right_row.keys #array of right table keys
-    right_key_map = {}
-    if !@left_table_column_name_adjusted
-
-      left_keys.each_index do |i|
-        left_key_map["#{left_keys[i]}"] = "#{@file_name}.#{left_keys[i]}"
-      end
-
-      left_row.transform_keys!{ |k| left_key_map[k]}
-    end
-
-    right_keys.each_index do |i|
-      right_key_map["#{right_keys[i]}"] = "#{@join_file_name}.#{right_keys[i]}"
-    end
-
-    right_row.transform_keys!{ |k| right_key_map[k]}
-
-    joined_rows = left_row.merge(right_row)
-    return joined_rows
-
-  end
-
 end
-request = MySqliteRequest.new
-request = request.from('students.csv')
+# request = MySqliteRequest.new
+# request = request.from('students.csv')
 # request = request.delete
 # request = request.from('nba_players_test.csv')
 # request = request.from('nba_test_1.csv')
@@ -500,8 +487,8 @@ request = request.from('students.csv')
 # request = request.set({"name"=>"Bryn Frayne","year_start"=>"2001","year_end"=>"2004","position"=>'C',"height"=>'6-2',"weight"=>'190',"birth_date"=>'May 30,1991',"college"=>'Camosun College'})
 # request = request.where('name','John')
 # request = request.where(/'nba_players_test.csv.height','180')
-request = request.where('email', 'jane@janedoe.com')
-request = request.select('*')
+# request = request.where('email', 'jane@janedoe.com')
+# request = request.select('*')
 # request = request.select(['nba_players.csv.Player', 'nba_player_data.csv.college'])
 # request = request.select(['email', 'blog'])
 # request = request.order('DESC', 'email')
@@ -509,7 +496,7 @@ request = request.select('*')
 # request = request.join('nba_players_test.csv.Player', 'nba_player_data.csv', 'nba_player_data.csv.name')
 # request = request.where('nba_players_test.csv.weight', 77)
 # request = request.where('nba_players.csv.born', '1921')
-print request.run
+# print request.run
 # request.run
 
 
@@ -573,7 +560,7 @@ print request.run
   #     # if there is a join request
   #     if @join_request.length > 0
   #       left_table_value = row[:"#{join_query[0]}"]
-  #       @join_table_data_hash_arr.each do |join_table_row|
+  #       @join_table_data_hash_array.each do |join_table_row|
   #         if join_table_row[:"#{@join_request[1]}"] == left_table_value && !matches_from_right_table.include?(join_table_row)
   #           matches_from_right_table.push(join_table_row)
   #           join_query_match = true

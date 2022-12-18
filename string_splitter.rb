@@ -258,9 +258,9 @@ end
 # $ INSERT INTO students.csv VALUES (John, john@johndoe.com, A, https://blog.johndoe.com);
 # $ INSERT INTO students.csv (name, email, grade, blog) VALUES (John, john@johndoe.com, A, https://blog.johndoe.com);
 # $ INSERT INTO students.csv VALUES ('John', 'john@johndoe.com', 'A', 'https://blog.johndoe.com');
-# $ UPDATE students.csv SET email = 'jane@janedoe.com', blog = 'https://blog.jane-jo.com' WHERE name = 'Jimmy Jo';
+# $ UPDATE students.csv SET email = 'jane@janedoe.com', blog = 'https://blog.jane-jo.com' WHERE name = 'John Doe';
 # $
-# $ DELETE FROM students.csv WHERE name = 'John' AND email = 'john@johndoe.com';
+# $ DELETE FROM students.csv WHERE name = 'John' AND email = 'jane@janedoe.com';
 # $ DELETE FROM nba_test_2_copy_2.csv;
 # string = "DELETE FROM (students.csv) WHERE name = 'John';"
 
