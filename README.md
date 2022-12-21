@@ -1,4 +1,4 @@
-MySQLite
+<h1>MySQLite</h1>
 <p>MySQLite is a simple database management system that allows users to perform various operations such as SELECT, INSERT, UPDATE, and DELETE. It supports only one JOIN and multiple WHERE conditions per request.</p>
 Features
 <ul>
@@ -14,20 +14,16 @@ Features
 </ul>
 Usage
 <p>To use MySQLite, create an instance of the <code>MySqliteRequest</code> class and call the various methods to build the request. The <code>run</code> method will execute the request and return the results.</p>
-Copy code
-request = MySqliteRequest.new
+<pre><code>request = MySqliteRequest.new
 request = request.from('students.db')
 request = request.select('name', 'email')
 request = request.where('grade', 'A')
-request.run
+request.run</code></pre>
 MySQLite CLI
 <p>MySQLite also includes a Command Line Interface (CLI) for interacting with the database through the terminal. To use the CLI, run the <code>my_sqlite_cli.rb</code> file and enter requests in the following format:</p>
-Copy code
-SELECT * FROM students.db;
+<pre><code>SELECT * FROM students.db;
 INSERT INTO students.db VALUES (John, john@johndoe.com, A, https://blog.johndoe.com);
 UPDATE students.db SET grade = 'B' WHERE name = 'Jane';
-DELETE FROM students.db WHERE name = 'John';
+DELETE FROM students.db WHERE name = 'John';</code></pre>
 Note
 <p>MySQLite saves and loads the database from a file, so all changes made through the CLI or <code>MySqliteRequest</code> class will be persisted between sessions.</p>
-
-
