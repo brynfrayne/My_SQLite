@@ -205,5 +205,5 @@ def main()
   cli = SQLiteParser.new
   cli.run()
 end
-# when the file is run directly, run the main method
+
 main()

@@ -475,7 +475,7 @@ class MySqliteRequest
     @table_data_array_with_hashes = filtered_set
   end
 end
-# request = MySqliteRequest.new
+request = MySqliteRequest.new
 # request = request.from('students.csv')
 # request = request.delete
 # request = request.from('nba_players_test.csv')
@@ -486,9 +486,9 @@ end
 # request = request.values({:name=>"Jiimmy Jo",:email=>"janejane@gmail.com", :grade=>"A-", :blog=>"https://blog.jimsspace.com"})
 # request = request.set({"name"=>"Bryn Frayne","year_start"=>"2001","year_end"=>"2004","position"=>'C',"height"=>'6-2',"weight"=>'190',"birth_date"=>'May 30,1991',"college"=>'Camosun College'})
 # request = request.where('name','John')
-# request = request.where(/'nba_players_test.csv.height','180')
+request = request.where('nba_players_test.csv.height','180')
 # request = request.where('email', 'jane@janedoe.com')
-# request = request.select('*')
+request = request.select('*')
 # request = request.select(['nba_players.csv.Player', 'nba_player_data.csv.college'])
 # request = request.select(['email', 'blog'])
 # request = request.order('DESC', 'email')
@@ -497,7 +497,7 @@ end
 # request = request.where('nba_players_test.csv.weight', 77)
 # request = request.where('nba_players.csv.born', '1921')
 # print request.run
-# request.run
+request.run
 
 
 
